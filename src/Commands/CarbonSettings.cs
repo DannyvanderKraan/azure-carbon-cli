@@ -61,8 +61,8 @@ public class CarbonSettings : LogCommandSettings, ICarbonSettings
     public bool IncludeTags { get; set; }
 
     [CommandOption("--carbonApiBaseAddress <BASE_ADDRESS>")]
-    [Description("The base address for the Carbon API. Defaults to https://management.azure.com/providers/Microsoft.Carbon/")]
-    public string CarbonApiAddress { get; set; } = "https://management.azure.com/providers/Microsoft.Carbon/";
+    [Description("The base address for the Carbon API. Defaults to https://management.azure.com/")]
+    public string CarbonApiAddress { get; set; } = "https://management.azure.com/";
 
     public Scope GetScope
     {

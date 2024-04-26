@@ -9,7 +9,7 @@ public static class AzCommand
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = "C:\\Program Files (x86)\\Microsoft SDKs\\Azure\\CLI2\\wbin\\az.cmd",
+            FileName = "az",
             Arguments = "account show",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -19,10 +19,6 @@ public static class AzCommand
 
         using (var process = new Process { StartInfo = startInfo })
         {
-            // Assuming process is your Process object
-            Console.WriteLine("Working Directory: " + process.StartInfo.WorkingDirectory);
-            Console.WriteLine("Arguments: " + process.StartInfo.Arguments);
-
             process.Start();
             string output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
