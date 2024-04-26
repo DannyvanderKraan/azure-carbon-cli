@@ -1,6 +1,6 @@
 namespace AzureCarbonCli.CarbonApi;
 
-public record CarbonResourceItem(double Carbon, string ResourceId, string ResourceType,
+public record CarbonResourceItem(double Carbon, string SubscriptionId, string ResourceId, string ResourceType,
     string ResourceLocation, string ResourceGroupName, string PublisherType, string? 
         ServiceName, string? ServiceTier, Dictionary<string, string> Tags);
 

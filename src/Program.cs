@@ -15,8 +15,14 @@ registrations.AddHttpClient("CarbonApi", client =>
     client.BaseAddress = new Uri("https://management.azure.com/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddPolicyHandler(PollyExtensions.GetRetryAfterPolicy());
+registrations.AddHttpClient("ResourceApi", client =>
+{
+    client.BaseAddress = new Uri("https://management.azure.com/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddPolicyHandler(PollyExtensions.GetRetryAfterPolicy());
 
 registrations.AddTransient<ICarbonRetriever, AzureCarbonApiRetriever>();
+registrations.AddTransient<AzureResourceApiRetriever>();
 
 var registrar = new TypeRegistrar(registrations);
 

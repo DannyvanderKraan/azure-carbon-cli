@@ -18,6 +18,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         var table = new Table()
             .RoundedBorder().Expand()
             .AddColumn("Resource")
+            .AddColumn("Subscription Id")
             .AddColumn("Resource Type")
             .AddColumn("Location")
             .AddColumn("Resource group name")
@@ -30,6 +31,7 @@ public class ConsoleOutputFormatter : BaseOutputFormatter
         {
   
             table.AddRow(new Markup("[bold]" + resource.ResourceId.Split('/').Last().EscapeMarkup() + "[/]"),
+                    new Markup(resource.SubscriptionId.EscapeMarkup()),
                     new Markup(resource.ResourceType.EscapeMarkup()),
                     new Markup(resource.ResourceLocation.EscapeMarkup()),
                     new Markup(resource.ResourceGroupName.EscapeMarkup()),

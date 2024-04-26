@@ -16,6 +16,7 @@ namespace AzureCarbonCli.CarbonApi;
 
 public class AzureCarbonApiRetriever : ICarbonRetriever
 {
+    private readonly AzureResourceApiRetriever _resourceApiRetriever;
     private readonly HttpClient _client;
     private bool _tokenRetrieved;
 
@@ -41,9 +42,10 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         // Add more dimension names as needed
     }
 
-    public AzureCarbonApiRetriever(IHttpClientFactory httpClientFactory)
+    public AzureCarbonApiRetriever(IHttpClientFactory httpClientFactory, AzureResourceApiRetriever azureResourceApiRetriever)
     {
         _client = httpClientFactory.CreateClient("CarbonApi");
+        _resourceApiRetriever = azureResourceApiRetriever;
     }
 
     private async Task RetrieveToken(bool includeDebugOutput)
@@ -192,32 +194,20 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         var items = new List<CarbonResourceItem>();
         foreach (CarbonEmissionItemDetailData row in content.Value)
         {
+            var resourcesList = await _resourceApiRetriever.GetResourcesBySubscriptionId(row.SubscriptionId);
+            var resourceProperties = resourcesList?.Value?.Find(x => x.Id.Equals(row.ResourceId, StringComparison.OrdinalIgnoreCase));
             double Carbon = row.TotalCarbonEmission;
+            string subscriptionId = row.SubscriptionId;
             string resourceId = row.ResourceId;
             string resourceType = row.ResourceType;
-            string resourceLocation = string.Empty; //TODO: Add location
+            string resourceLocation = resourceProperties?.Location ?? string.Empty;
             string resourceGroupName = row.ResourceGroup;
             string publisherType = string.Empty; //TODO: Add publisher type
             string serviceName = string.Empty; //TODO: Add service name
             string serviceTier = string.Empty; //TODO: Add service tier
-            var tagsArray = Array.Empty<string>(); //TODO: Add tags
+            var tags = resourceProperties?.Tags ?? [];
 
-            Dictionary<string, string> tags = new Dictionary<string, string>();
-
-            foreach (var tag in tagsArray)
-            {
-                // Split the string into key and value
-                string[] keyValue = tag.Split(':');
-
-                // Remove quotes from keys and values
-                string key = keyValue[0].Trim('\"');
-                string value = keyValue[1].Trim('\"');
-
-
-                tags.Add(key, value);
-            }
-
-            CarbonResourceItem item = new CarbonResourceItem(Carbon, resourceId, resourceType, resourceLocation,
+            CarbonResourceItem item = new CarbonResourceItem(Carbon, subscriptionId, resourceId, resourceType, resourceLocation,
                 resourceGroupName, publisherType, serviceName, serviceTier, tags);
 
             items.Add(item);
@@ -228,6 +218,7 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         foreach (var groupedItem in groupedItems)
         {
             var aggregatedItem = new CarbonResourceItem(groupedItem.Sum(x => x.Carbon),
+                groupedItem.First().SubscriptionId,
                 groupedItem.Key, groupedItem.First().ResourceType,
                 string.Join(", ", groupedItem.Select(x => x.ResourceLocation)),
                 groupedItem.First().ResourceGroupName, groupedItem.First().PublisherType, null, null,
