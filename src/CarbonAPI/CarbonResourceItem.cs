@@ -12,4 +12,6 @@ public static class CarbonResourceItemExtensions
         var parts = resource.ResourceId.Split('/');
         return parts.Last();
     }
+
+    
 }

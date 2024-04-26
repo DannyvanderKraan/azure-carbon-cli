@@ -96,7 +96,7 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         DateOnly to)
     {
         var uri = new Uri("/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview", UriKind.Relative);
-
+        var subscriptions= new[] { "2193e77b-d7ae-498b-9a28-14abbd97dfe2", "aeaddd47-153c-436f-9e3e-5fd9b42f737d" };
         var payload = new
         {
             carbonScopeList = new[] { "Scope1", "Scope2", "Scope3" },
@@ -107,9 +107,16 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             reportType = "ItemDetailReport",
             resourceGroupUrlList = Array.Empty<string>(),
             sortDirection = "Asc",
-            subscriptionList = new[] { "2193e77b-d7ae-498b-9a28-14abbd97dfe2", "aeaddd47-153c-436f-9e3e-5fd9b42f737d" },
+            subscriptionList = subscriptions,
             skipToken = string.Empty
         };
+
+        var subscriptionWithResources = new Dictionary<string, Root?>();
+        foreach (var subscription in subscriptions)
+        {
+            var root = await _resourceApiRetriever.GetResourcesBySubscriptionId(subscription);
+            subscriptionWithResources.Add(subscription, root);
+        }
 
         var response = await ExecuteCallToCarbonApi(includeDebugOutput, payload, uri);
 
@@ -118,7 +125,7 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         var items = new List<CarbonResourceItem>();
         foreach (CarbonEmissionItemDetailData row in content.Value)
         {
-            var resourcesList = await _resourceApiRetriever.GetResourcesBySubscriptionId(row.SubscriptionId);
+            var resourcesList = subscriptionWithResources[row.SubscriptionId];
             var resourceProperties = resourcesList?.Value?.Find(x => x.Id.Equals(row.ResourceId, StringComparison.OrdinalIgnoreCase));
             double Carbon = row.TotalCarbonEmission;
             string subscriptionId = row.SubscriptionId;
