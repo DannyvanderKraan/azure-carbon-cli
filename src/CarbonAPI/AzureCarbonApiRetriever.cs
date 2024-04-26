@@ -1,11 +1,14 @@
 ﻿using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Identity;
 using AzureCarbonCli.Commands;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Spectre.Console;
 using Spectre.Console.Json;
 
@@ -123,7 +126,7 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         if (includeDebugOutput)
         {
             AnsiConsole.WriteLine($"Retrieving data from {uri} using the following payload:");
-            AnsiConsole.Write(new JsonText(JsonSerializer.Serialize(payload)));
+            AnsiConsole.Write(new JsonText(JsonConvert.SerializeObject(payload)));
             AnsiConsole.WriteLine();
         }
 
@@ -138,9 +141,13 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
+        string json = JsonConvert.SerializeObject(payload);
+        StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+
         var response = payload == null
             ? await _client.GetAsync(uri)
-            : await _client.PostAsJsonAsync(uri, payload, options);
+            : await _client.PostAsync("https://management.azure.com/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview", 
+            content);
 
         if (includeDebugOutput)
         {
@@ -161,89 +168,53 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         DateOnly from,
         DateOnly to)
     {
-        var uri = DeterminePath(scope, "/providers/Microsoft.CarbonManagement/query?api-version=2023-03-01&$top=5000");
+        //var uri = DeterminePath(scope, "/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview");
+        var uri = new Uri("/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview", UriKind.Relative);
 
-        object grouping = new[]
-            {
-                new
-                {
-                    type = "Dimension",
-                    name = "ResourceId"
-                },
-                new
-                {
-                    type = "Dimension",
-                    name = "ResourceType"
-                },
-                new
-                {
-                    type = "Dimension",
-                    name = "ResourceLocation"
-                },
-                new
-                {
-                    type = "Dimension",
-                    name = "ResourceGroupName"
-                }
-            };
-  
         var payload = new
         {
-            timeframe = timeFrame.ToString(),
-            timePeriod = timeFrame == TimeframeType.Custom
-                ? new
-                {
-                    from = from.ToString("yyyy-MM-dd"),
-                    to = to.ToString("yyyy-MM-dd")
-                }
-                : null,
-            dataSet = new
-            {
-                granularity = "None",
-                aggregation = new
-                {
-                    totalCarbon = new
-                    {
-                        name = "Carbon",
-                        function = "Sum"
-                    }
-                },
-                include = new[] { "Tags" },
-                filter = GenerateFilters(filter),
-                grouping = grouping,
-            }
+            carbonScopeList = new[] { "Scope1", "Scope2", "Scope3" },
+            categoryType = "Resource",
+            dateRange = new { start = "2024-01-01", end = "2024-01-01" },
+            orderBy = "TotalCarbonEmission",
+            pageSize = 10,
+            reportType = "ItemDetailReport",
+            resourceGroupUrlList = Array.Empty<string>(),
+            sortDirection = "Asc",
+            subscriptionList = new[] { "2193e77b-d7ae-498b-9a28-14abbd97dfe2", "aeaddd47-153c-436f-9e3e-5fd9b42f737d" },
+            skipToken = string.Empty
         };
+
         var response = await ExecuteCallToCarbonApi(includeDebugOutput, payload, uri);
 
-        CarbonQueryResponse? content = await response.Content.ReadFromJsonAsync<CarbonQueryResponse>();
+        CarbonEmissionDataListResult? content = await response.Content.ReadFromJsonAsync<CarbonEmissionDataListResult>();
 
         var items = new List<CarbonResourceItem>();
-        foreach (JsonElement row in content.properties.rows)
+        foreach (CarbonEmissionItemDetailData row in content.Value)
         {
-            double Carbon = row[0].GetDouble();
-            string resourceId = row[2].GetString();
-            string resourceType = row[3].GetString();
-            string resourceLocation = row[4].GetString();
-            string resourceGroupName = row[6].GetString();
-            string publisherType = row[7].GetString();
-            string serviceName = row[8].GetString();
-            string serviceTier = row[9].GetString();
-
-            int tagsColumn = 8;
-            // Assuming row[tagsColumn] contains the tags array
-            var tagsArray = row[tagsColumn].EnumerateArray().ToArray();
+            double Carbon = row.TotalCarbonEmission;
+            string resourceId = row.ResourceId;
+            string resourceType = row.ResourceType;
+            string resourceLocation = string.Empty; //TODO: Add location
+            string resourceGroupName = row.ResourceGroup;
+            string publisherType = string.Empty; //TODO: Add publisher type
+            string serviceName = string.Empty; //TODO: Add service name
+            string serviceTier = string.Empty; //TODO: Add service tier
+            var tagsArray = Array.Empty<string>(); //TODO: Add tags
 
             Dictionary<string, string> tags = new Dictionary<string, string>();
 
-            foreach (var tagString in tagsArray)
+            foreach (var tag in tagsArray)
             {
-                var parts = tagString.GetString().Split(':');
-                if (parts.Length == 2) // Ensure the string is in the format "key:value"
-                {
-                    var key = parts[0].Trim('"'); // Remove quotes from the key
-                    var value = parts[1].Trim('"'); // Remove quotes from the value
-                    tags[key] = value;
-                }
+                // Split the string into key and value
+                string[] keyValue = tag.Split(':');
+
+                // Remove quotes from keys and values
+                string key = keyValue[0].Trim('\"');
+                string value = keyValue[1].Trim('\"');
+
+
+                tags.Add(key, value);
             }
 
             CarbonResourceItem item = new CarbonResourceItem(Carbon, resourceId, resourceType, resourceLocation,
@@ -252,19 +223,19 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             items.Add(item);
         }
 
-            var aggregatedItems = new List<CarbonResourceItem>();
-            var groupedItems = items.GroupBy(x => x.ResourceId);
-            foreach (var groupedItem in groupedItems)
-            {
-                var aggregatedItem = new CarbonResourceItem(groupedItem.Sum(x => x.Carbon), 
-                    groupedItem.Key, groupedItem.First().ResourceType,
-                    string.Join(", ", groupedItem.Select(x => x.ResourceLocation)), 
-                    groupedItem.First().ResourceGroupName, groupedItem.First().PublisherType, null, null,
-                    groupedItem.First().Tags);
-                aggregatedItems.Add(aggregatedItem);
-            }
+        var aggregatedItems = new List<CarbonResourceItem>();
+        var groupedItems = items.GroupBy(x => x.ResourceId);
+        foreach (var groupedItem in groupedItems)
+        {
+            var aggregatedItem = new CarbonResourceItem(groupedItem.Sum(x => x.Carbon),
+                groupedItem.Key, groupedItem.First().ResourceType,
+                string.Join(", ", groupedItem.Select(x => x.ResourceLocation)),
+                groupedItem.First().ResourceGroupName, groupedItem.First().PublisherType, null, null,
+                groupedItem.First().Tags);
+            aggregatedItems.Add(aggregatedItem);
+        }
 
-            return aggregatedItems;
+        return aggregatedItems;
     }
 
 }
