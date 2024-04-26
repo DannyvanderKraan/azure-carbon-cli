@@ -22,26 +22,6 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
 
     public string CarbonApiAddress { get; set; }
 
-    public enum DimensionNames
-    {
-        PublisherType,
-        ResourceGroupName,
-        ResourceLocation,
-        ResourceId,
-        ServiceName,
-        ServiceTier,
-        ServiceFamily,
-        InvoiceId,
-        CustomerName,
-        PartnerName,
-        ResourceType,
-        ChargeType,
-        BillingPeriod,
-        MeterCategory,
-        MeterSubCategory,
-        // Add more dimension names as needed
-    }
-
     public AzureCarbonApiRetriever(IHttpClientFactory httpClientFactory, AzureResourceApiRetriever azureResourceApiRetriever)
     {
         _client = httpClientFactory.CreateClient("CarbonApi");
@@ -61,8 +41,7 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         if (includeDebugOutput)
             AnsiConsole.WriteLine($"Using token credential: {tokenCredential.GetType().Name} to fetch a token.");
 
-        var token = await tokenCredential.GetTokenAsync(new TokenRequestContext(new[]
-            { $"{CarbonApiAddress}.default" }));
+        var token = await tokenCredential.GetTokenAsync(new TokenRequestContext([$"{CarbonApiAddress}.default"]));
 
         if (includeDebugOutput)
             AnsiConsole.WriteLine($"Token retrieved and expires at: {token.ExpiresOn}");
@@ -71,54 +50,6 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
         _tokenRetrieved = true;
-    }
-
-
-    private object? GenerateFilters(string[]? filterArgs)
-    {
-        if (filterArgs == null || filterArgs.Length == 0)
-            return null;
-
-        var filters = new List<object>();
-        foreach (var arg in filterArgs)
-        {
-            var filterParts = arg.Split('=');
-            var name = filterParts[0];
-            var values = filterParts[1].Split(';');
-
-            // Define default filter dictionary
-            var filterDict = new Dictionary<string, object>()
-            {
-                { "Name", name },
-                { "Operator", "In" },
-                { "Values", new List<string>(values) }
-            };
-
-            // Decide if this is a Dimension or a Tag filter
-            if (Enum.IsDefined(typeof(DimensionNames), name))
-            {
-                filters.Add(new { Dimensions = filterDict });
-            }
-            else
-            {
-                filters.Add(new { Tags = filterDict });
-            }
-        }
-
-        if (filters.Count > 1)
-            return new
-            {
-                And = filters
-            };
-        else
-            return filters[0];
-    }
-
-    private Uri DeterminePath(Scope scope, string path)
-    {
-        // return the scope.ScopePath combined with the path
-        return new Uri(scope.ScopePath + path, UriKind.Relative);
-
     }
 
     private async Task<HttpResponseMessage> ExecuteCallToCarbonApi(bool includeDebugOutput, object? payload, Uri uri)
@@ -136,12 +67,6 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         {
             _client.BaseAddress = new Uri(CarbonApiAddress);
         }
-
-        var options = new JsonSerializerOptions
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
 
         string json = JsonConvert.SerializeObject(payload);
         StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -170,7 +95,6 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         DateOnly from,
         DateOnly to)
     {
-        //var uri = DeterminePath(scope, "/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview");
         var uri = new Uri("/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview", UriKind.Relative);
 
         var payload = new
