@@ -62,7 +62,7 @@ public class Identity
     public string Type { get; set; }
 }
 
-public class Root
+public class ResourcesBySubscriptionId
 {
     [JsonProperty("value")]
     public List<Resource> Value { get; set; }

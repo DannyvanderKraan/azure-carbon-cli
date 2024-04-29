@@ -9,7 +9,7 @@ public class TextOutputFormatter : BaseOutputFormatter
 {
     public override Task WriteCarbonByResource(CarbonByResourceSettings settings, IEnumerable<CarbonResourceItem> resources)
     {
-        if (settings.SkipHeader == false)
+        if (settings.SkipHeader)
         {
             Console.WriteLine(
                 $"Azure Cost Overview for {settings.Subscription} by resource");

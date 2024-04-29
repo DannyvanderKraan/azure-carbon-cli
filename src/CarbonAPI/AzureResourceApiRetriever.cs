@@ -27,11 +27,11 @@ public class AzureResourceApiRetriever {
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
     }
 
-    public async Task<Root?> GetResourcesBySubscriptionId(string subscriptionId){
+    public async Task<ResourcesBySubscriptionId?> GetResourcesBySubscriptionId(string subscriptionId){
         var uri = new Uri($"https://management.azure.com/subscriptions/{subscriptionId}/resources?api-version=2021-04-01");
         var result = await ExecuteCall(false, null, uri);
         var jsonResult = await result.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<Root>(jsonResult);
+        return JsonConvert.DeserializeObject<ResourcesBySubscriptionId>(jsonResult);
     }
 
     private async Task<HttpResponseMessage> ExecuteCall(bool includeDebugOutput, object? payload, Uri uri)
@@ -45,14 +45,8 @@ public class AzureResourceApiRetriever {
             AnsiConsole.WriteLine();
         }
 
-        var options = new JsonSerializerOptions
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
         string json = JsonConvert.SerializeObject(payload);
-        StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+        StringContent content = new(json, Encoding.UTF8, "application/json");
 
         var response = payload == null
             ? await _client.GetAsync(uri)
