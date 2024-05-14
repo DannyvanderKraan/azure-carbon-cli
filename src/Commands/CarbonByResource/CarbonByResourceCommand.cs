@@ -60,7 +60,7 @@ namespace AzureCarbonCli.Commands.CarbonByResource
             // Get the subscription ID from the settings
             var subscriptionId = settings.Subscription;
 
-            if (subscriptionId.HasValue && (settings.GetScope.IsSubscriptionBased))
+            if (!subscriptionId.HasValue && (settings.GetScope.IsSubscriptionBased))
             {
                 // Get the subscription ID from the Azure CLI
                 try
