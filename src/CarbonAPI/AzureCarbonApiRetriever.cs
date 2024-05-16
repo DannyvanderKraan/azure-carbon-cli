@@ -1,14 +1,10 @@
-﻿using System.Globalization;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Identity;
 using AzureCarbonCli.Commands;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Spectre.Console;
 using Spectre.Console.Json;
 
