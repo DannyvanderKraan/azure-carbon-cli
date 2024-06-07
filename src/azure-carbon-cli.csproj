@@ -15,8 +15,8 @@
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageId>azure-carbon-cli</PackageId>
 		<PackageOutputPath>./nupkg</PackageOutputPath>
-		<Version>0.0.1</Version>
-		<Authors>Danny van der Kraan, Camiel Eggermond</Authors>
+		<Version>0.0.2</Version>
+		<Authors>Danny van der Kraan, Camiel Eggermont, Peter Szekeli</Authors>
 		<Description>Command line tool to get Azure carbon information</Description>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/dannyvanderkraan/azure-carbon-cli/</PackageProjectUrl>
@@ -24,6 +24,8 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>azure;carbon;cli</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<NeutralLanguage>en-US</NeutralLanguage>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.11.1" />
@@ -49,6 +51,19 @@
 
 	<ItemGroup>
 		<None Remove="nupkg\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="README.md">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 </Project>
