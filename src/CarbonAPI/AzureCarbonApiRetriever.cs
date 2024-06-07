@@ -88,8 +88,8 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
     public async Task<IEnumerable<CarbonResourceItem>> RetrieveCarbonForResources(
         Guid subscriptionId,
         bool includeDebugOutput,
-        Scope scope, 
-        string[] filter, 
+        Scope scope,
+        string[] filter,
         TimeframeType timeFrame,
         DateOnly from,
         DateOnly to)
@@ -103,16 +103,17 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             categoryType = "Resource",
             dateRange = new
             {
-                start = from.ToString("yyyy-MM-dd"), 
+                start = from.ToString("yyyy-MM-dd"),
                 end = to.ToString("yyyy-MM-dd")
             },
             orderBy = "TotalCarbonEmission",
             pageSize = 10,
-            reportType = "ItemDetailReport",
+            reportType = "ItemDetailsReport",
             resourceGroupUrlList = Array.Empty<string>(),
             sortDirection = "Asc",
             subscriptionList = new[] { subscriptionId },
-            skipToken = string.Empty
+            skipToken = string.Empty,
+            groupCategory = string.Empty
         };
 
         var subscriptionWithResources = new Dictionary<string, ResourcesBySubscriptionId?>();
