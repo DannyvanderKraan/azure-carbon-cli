@@ -1,1 +1,1 @@
-﻿# Azure Carbon CLI
+﻿# Azure Carbon CLI - Package
