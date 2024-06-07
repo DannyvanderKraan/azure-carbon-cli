@@ -23,7 +23,7 @@
 		<RepositoryUrl>https://github.com/dannyvanderkraan/azure-carbon-cli/</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>azure;carbon;cli</PackageTags>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.11.1" />
@@ -49,6 +49,16 @@
 
 	<ItemGroup>
 		<None Remove="nupkg\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="README.md" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="README.md">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 </Project>
