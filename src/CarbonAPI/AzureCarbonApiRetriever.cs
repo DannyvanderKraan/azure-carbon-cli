@@ -95,7 +95,6 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         DateOnly to)
     {
         var uri = new Uri("/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview", UriKind.Relative);
-        // var subscriptions = new[] { "2193e77b-d7ae-498b-9a28-14abbd97dfe2", "aeaddd47-153c-436f-9e3e-5fd9b42f737d" };
         var subscriptions = new[] { subscriptionId.ToString() };
         var payload = new
         {
@@ -136,20 +135,18 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             }
         }
 
-        var aggregatedItems = new List<CarbonResourceItem>();
         var groupedItems = items.GroupBy(x => x.ResourceId);
-        foreach (var groupedItem in groupedItems)
-        {
-            var aggregatedItem = new CarbonResourceItem(groupedItem.Sum(x => x.Carbon),
-                groupedItem.First().SubscriptionId,
-                groupedItem.Key, groupedItem.First().ResourceType,
-                string.Join(", ", groupedItem.Select(x => x.ResourceLocation)),
-                groupedItem.First().ResourceGroupName, groupedItem.First().PublisherType, null, null,
-                groupedItem.First().Tags);
-            aggregatedItems.Add(aggregatedItem);
-        }
 
-        return aggregatedItems;
+        return groupedItems.Select(groupedItem => new CarbonResourceItem(
+                groupedItem.Sum(x => x.Carbon),
+                groupedItem.First().SubscriptionId,
+                groupedItem.Key,
+                groupedItem.First().ResourceType,
+                string.Join(", ", groupedItem.Select(x => x.ResourceLocation)),
+                groupedItem.First().ResourceGroupName, groupedItem.First().PublisherType,
+                null,
+                null,
+                groupedItem.First().Tags));
     }
 }
 
