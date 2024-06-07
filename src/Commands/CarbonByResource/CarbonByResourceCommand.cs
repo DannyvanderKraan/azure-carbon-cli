@@ -53,7 +53,9 @@ namespace AzureCarbonCli.Commands.CarbonByResource
         {
             // Show version
             if (settings.Debug)
+            {
                 AnsiConsole.WriteLine($"Version: {typeof(CarbonByResourceCommand).Assembly.GetName().Version}");
+            }
 
             _carbonRetriever.CarbonApiAddress = settings.CarbonApiAddress;
 
@@ -91,6 +93,7 @@ namespace AzureCarbonCli.Commands.CarbonByResource
                 .StartAsync("Fetching carbon data for resources...", async ctx =>
                 {
                     resources = await _carbonRetriever.RetrieveCarbonForResources(
+                        subscriptionId.Value,
                         settings.Debug,
                         settings.GetScope, 
                         settings.Filter,

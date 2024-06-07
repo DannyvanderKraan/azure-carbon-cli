@@ -64,8 +64,8 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             _client.BaseAddress = new Uri(CarbonApiAddress);
         }
 
-        string json = JsonConvert.SerializeObject(payload);
-        StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+        var json = JsonConvert.SerializeObject(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = payload == null
             ? await _client.GetAsync(uri)
@@ -74,8 +74,7 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
 
         if (includeDebugOutput)
         {
-            AnsiConsole.WriteLine(
-                $"Response status code is {response.StatusCode} and got payload size of {response.Content.Headers.ContentLength}");
+            AnsiConsole.WriteLine($"Response status code is {response.StatusCode} and got payload size of {response.Content.Headers.ContentLength}");
             if (!response.IsSuccessStatusCode)
             {
                 AnsiConsole.WriteLine($"Response content: {await response.Content.ReadAsStringAsync()}");
@@ -86,24 +85,32 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         return response;
     }
 
-    public async Task<IEnumerable<CarbonResourceItem>> RetrieveCarbonForResources(bool includeDebugOutput,
-        Scope scope, string[] filter, TimeframeType timeFrame,
+    public async Task<IEnumerable<CarbonResourceItem>> RetrieveCarbonForResources(
+        Guid subscriptionId,
+        bool includeDebugOutput,
+        Scope scope,
+        string[] filter,
+        TimeframeType timeFrame,
         DateOnly from,
         DateOnly to)
     {
         var uri = new Uri("/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview", UriKind.Relative);
-        var subscriptions = new[] { "2193e77b-d7ae-498b-9a28-14abbd97dfe2", "aeaddd47-153c-436f-9e3e-5fd9b42f737d" };
+        var subscriptions = new[] { subscriptionId.ToString() };
         var payload = new
         {
             carbonScopeList = new[] { "Scope1", "Scope2", "Scope3" },
             categoryType = "Resource",
-            dateRange = new { start = "2024-01-01", end = "2024-01-01" },
+            dateRange = new
+            {
+                start = from.ToString("yyyy-MM-dd"),
+                end = to.ToString("yyyy-MM-dd")
+            },
             orderBy = "TotalCarbonEmission",
             pageSize = 10,
             reportType = "ItemDetailsReport",
             resourceGroupUrlList = Array.Empty<string>(),
             sortDirection = "Asc",
-            subscriptionList = subscriptions,
+            subscriptionList = new[] { subscriptionId },
             skipToken = string.Empty,
             groupCategory = string.Empty
         };
@@ -128,20 +135,18 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             }
         }
 
-        var aggregatedItems = new List<CarbonResourceItem>();
         var groupedItems = items.GroupBy(x => x.ResourceId);
-        foreach (var groupedItem in groupedItems)
-        {
-            var aggregatedItem = new CarbonResourceItem(groupedItem.Sum(x => x.Carbon),
-                groupedItem.First().SubscriptionId,
-                groupedItem.Key, groupedItem.First().ResourceType,
-                string.Join(", ", groupedItem.Select(x => x.ResourceLocation)),
-                groupedItem.First().ResourceGroupName, groupedItem.First().PublisherType, null, null,
-                groupedItem.First().Tags);
-            aggregatedItems.Add(aggregatedItem);
-        }
 
-        return aggregatedItems;
+        return groupedItems.Select(groupedItem => new CarbonResourceItem(
+                groupedItem.Sum(x => x.Carbon),
+                groupedItem.First().SubscriptionId,
+                groupedItem.Key,
+                groupedItem.First().ResourceType,
+                string.Join(", ", groupedItem.Select(x => x.ResourceLocation)),
+                groupedItem.First().ResourceGroupName, groupedItem.First().PublisherType,
+                null,
+                null,
+                groupedItem.First().Tags));
     }
 }
 
