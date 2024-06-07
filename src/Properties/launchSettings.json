@@ -2,7 +2,7 @@
   "profiles": {
     "azure-carbon-cli": {
       "commandName": "Project",
-      "commandLineArgs": "-s 2193e77b-d7ae-498b-9a28-14abbd97dfe2"
+      "commandLineArgs": "--subscription 2193e77b-d7ae-498b-9a28-14abbd97dfe2 --from 2024-05-01 --to 2024-05-15"
     }
   }
 }

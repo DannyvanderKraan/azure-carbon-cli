@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using AzureCarbonCli.CarbonApi;
-using AzureCarbonCli.Commands;
+﻿using AzureCarbonCli.CarbonApi;
 using AzureCarbonCli.Commands.CarbonByResource;
 using AzureCarbonCli.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,7 +42,6 @@ app.Configure(config =>
 
     config.AddCommand<CarbonByResourceCommand>("carbonByResource")
       .WithDescription("Show the carbon by resource.");
-
 
     config.ValidateExamples();
 });

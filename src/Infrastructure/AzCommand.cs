@@ -17,31 +17,28 @@ public static class AzCommand
             CreateNoWindow = true
         };
 
-        using (var process = new Process { StartInfo = startInfo })
+        using var process = new Process();
+        process.StartInfo = startInfo;
+        process.Start();
+        var output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
         {
-            process.Start();
-            string output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
+            var error = process.StandardError.ReadToEnd();
+            throw new Exception($"Error executing 'az account show': {error}");
+        }
 
-            if (process.ExitCode != 0)
-            {
-                string error = process.StandardError.ReadToEnd();
-                throw new Exception($"Error executing 'az account show': {error}");
-            }
-
-            using (var jsonDocument = JsonDocument.Parse(output))
-            {
-                JsonElement root = jsonDocument.RootElement;
-                if (root.TryGetProperty("id", out JsonElement idElement))
-                {
-                    string subscriptionId = idElement.GetString();
-                    return subscriptionId;
-                }
-                else
-                {
-                    throw new Exception("Unable to find the 'id' property in the JSON output.");
-                }
-            }
+        using var jsonDocument = JsonDocument.Parse(output);
+        var root = jsonDocument.RootElement;
+        if (root.TryGetProperty("id", out var idElement))
+        {
+            var subscriptionId = idElement.GetString()!;
+            return subscriptionId;
+        }
+        else
+        {
+            throw new Exception("Unable to find the 'id' property in the JSON output.");
         }
     }
 }
