@@ -35,7 +35,7 @@ public class CarbonSettings : LogCommandSettings, ICarbonSettings
 
     [CommandOption("--to")]
     [Description("The end date to use for the carbon. Defaults to the current date.")]
-    public DateOnly To { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    public DateOnly To { get; set; } = DateOnly.FromDateTime(new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(-1));
 
     [CommandOption("--others-cutoff")]
     [Description("The number of items to show before collapsing the rest into an 'Others' item.")]
@@ -53,7 +53,7 @@ public class CarbonSettings : LogCommandSettings, ICarbonSettings
 
     [CommandOption("--filter")]
     [Description("Filter the output by the specified properties. Defaults to no filtering and can be multiple values.")]
-    public string[] Filter { get; set; } = Array.Empty<string>();
+    public string[] Filter { get; set; } = [];
 
     [CommandOption("--includeTags")]
     [Description("Include Tags from the selected dimension.")]
@@ -64,14 +64,7 @@ public class CarbonSettings : LogCommandSettings, ICarbonSettings
     [Description("The base address for the Carbon API. Defaults to https://management.azure.com/")]
     public string CarbonApiAddress { get; set; } = "https://management.azure.com/";
 
-    public Scope GetScope
-    {
-        get
-        {
-            return Scope.Subscription(Subscription.GetValueOrDefault(Guid.Empty));
-        }
-    }
-
+    public Scope GetScope => Scope.Subscription(Subscription.GetValueOrDefault(Guid.Empty));
 }
 
 /// <summary>
