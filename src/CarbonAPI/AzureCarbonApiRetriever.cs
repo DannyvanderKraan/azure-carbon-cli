@@ -100,11 +100,12 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             dateRange = new { start = "2024-01-01", end = "2024-01-01" },
             orderBy = "TotalCarbonEmission",
             pageSize = 10,
-            reportType = "ItemDetailReport",
+            reportType = "ItemDetailsReport",
             resourceGroupUrlList = Array.Empty<string>(),
             sortDirection = "Asc",
             subscriptionList = subscriptions,
-            skipToken = string.Empty
+            skipToken = string.Empty,
+            groupCategory = string.Empty
         };
 
         var subscriptionWithResources = new Dictionary<string, ResourcesBySubscriptionId?>();
