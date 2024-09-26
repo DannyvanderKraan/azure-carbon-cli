@@ -25,6 +25,28 @@ namespace AzureCarbonCli.Commands.CarbonByResource
             _outputFormatters.Add(OutputFormat.Csv, new CsvOutputFormatter());
         }
 
+        public override ValidationResult Validate(CommandContext context, CarbonByResourceSettings settings)
+        {
+            // Validate if the timeframe is set to Custom, then the month must be specified.
+            if (settings.Timeframe == TimeframeType.Custom)
+            {
+                if (settings.Year == 0)
+                {
+                    return ValidationResult.Error("Year can't be equal to zero.");
+                }
+                if (settings.Month == 0)
+                {
+                    return ValidationResult.Error("Month can't be equal to zero.");
+                }
+                if (settings.Month > 12)
+                {
+                    return ValidationResult.Error("The given month is bigger than 12");
+                }
+            }
+
+            return ValidationResult.Success();
+        }
+
         public override async Task<int> ExecuteAsync(CommandContext context, CarbonByResourceSettings settings)
         {
             // Show version
@@ -34,7 +56,6 @@ namespace AzureCarbonCli.Commands.CarbonByResource
             }
 
             _carbonRetriever.CarbonApiAddress = settings.CarbonApiAddress;
-            settings.Month = new DateOnly(settings.Month.Year, settings.Month.Month, 1);
 
             // Get the subscription ID from the settings
             var subscriptionId = settings.Subscription;
@@ -75,6 +96,7 @@ namespace AzureCarbonCli.Commands.CarbonByResource
                         settings.GetScope, 
                         settings.Filter,
                         settings.Timeframe,
+                        settings.Year,
                         settings.Month);
                 });
 

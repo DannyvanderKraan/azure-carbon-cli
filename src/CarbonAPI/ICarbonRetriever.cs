@@ -13,7 +13,8 @@ public interface ICarbonRetriever
         Scope scope, 
         string[] filter, 
         TimeframeType settingsTimeframe, 
-        DateOnly firstDayOfMonth);
+        int year,
+        int month);
 }
 
 

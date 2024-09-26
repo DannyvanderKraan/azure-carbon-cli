@@ -29,9 +29,13 @@ public class CarbonSettings : LogCommandSettings, ICarbonSettings
     [Description("The timeframe to use for the carbon. Defaults to BillingMonthToDate. When set to Custom, specify the from and to dates using the --from and --to options")]
     public TimeframeType Timeframe { get; set; } = TimeframeType.BillingMonthToDate;
 
+    [CommandOption("--year")]
+    [Description("The year to use for the carbon. Defaults to the current year.")]
+    public int Year { get; set; } = DateTime.Now.Year;
+    
     [CommandOption("--month")]
-    [Description("The month to use for the carbon. The month the date falls in will always be used. Defaults to the first day of the previous month.")]
-    public DateOnly Month { get; set; } = DateOnly.FromDateTime(new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(-1));
+    [Description("The month to use for the carbon. Defaults to the current month.")]
+    public int Month { get; set; } = DateTime.Now.Month;
     
     [CommandOption("--others-cutoff")]
     [Description("The number of items to show before collapsing the rest into an 'Others' item.")]
