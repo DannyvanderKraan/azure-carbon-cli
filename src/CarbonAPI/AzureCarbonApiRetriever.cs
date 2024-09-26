@@ -91,8 +91,7 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
         Scope scope,
         string[] filter,
         TimeframeType timeFrame,
-        DateOnly from,
-        DateOnly to)
+        DateOnly firstDayOfMonth)
     {
         var uri = new Uri("/providers/Microsoft.Carbon/carbonEmissionReports?api-version=2023-04-01-preview", UriKind.Relative);
         var subscriptions = new[] { subscriptionId.ToString() };
@@ -102,8 +101,8 @@ public class AzureCarbonApiRetriever : ICarbonRetriever
             categoryType = "Resource",
             dateRange = new
             {
-                start = from.ToString("yyyy-MM-dd"),
-                end = to.ToString("yyyy-MM-dd")
+                start = firstDayOfMonth.ToString("yyyy-MM-dd"),
+                end = firstDayOfMonth.ToString("yyyy-MM-dd")
             },
             orderBy = "TotalCarbonEmission",
             pageSize = 10,

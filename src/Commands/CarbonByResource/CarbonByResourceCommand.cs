@@ -25,30 +25,6 @@ namespace AzureCarbonCli.Commands.CarbonByResource
             _outputFormatters.Add(OutputFormat.Csv, new CsvOutputFormatter());
         }
 
-        public override ValidationResult Validate(CommandContext context, CarbonByResourceSettings settings)
-        {
-            // Validate if the timeframe is set to Custom, then the from and to dates must be specified and the from date must be before the to date
-            if (settings.Timeframe == TimeframeType.Custom)
-            {
-                if (settings.From == null)
-                {
-                    return ValidationResult.Error("The from date must be specified when the timeframe is set to Custom.");
-                }
-
-                if (settings.To == null)
-                {
-                    return ValidationResult.Error("The to date must be specified when the timeframe is set to Custom.");
-                }
-
-                if (settings.From > settings.To)
-                {
-                    return ValidationResult.Error("The from date must be before the to date.");
-                }
-            }
-
-            return ValidationResult.Success();
-        }
-
         public override async Task<int> ExecuteAsync(CommandContext context, CarbonByResourceSettings settings)
         {
             // Show version
@@ -58,6 +34,7 @@ namespace AzureCarbonCli.Commands.CarbonByResource
             }
 
             _carbonRetriever.CarbonApiAddress = settings.CarbonApiAddress;
+            settings.Month = new DateOnly(settings.Month.Year, settings.Month.Month, 1);
 
             // Get the subscription ID from the settings
             var subscriptionId = settings.Subscription;
@@ -98,8 +75,7 @@ namespace AzureCarbonCli.Commands.CarbonByResource
                         settings.GetScope, 
                         settings.Filter,
                         settings.Timeframe,
-                        settings.From,
-                        settings.To);
+                        settings.Month);
                 });
 
             // Write the output
