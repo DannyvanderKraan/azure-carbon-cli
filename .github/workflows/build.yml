@@ -50,6 +50,9 @@ jobs:
           echo "New version: $new_version"
           echo "::set-output name=new_version::$new_version"
 
+      - name: Build using Release config
+        run: dotnet build src/azure-carbon-cli.csproj -c Release
+
       - name: Package CLI Tool
         run: dotnet pack src/azure-carbon-cli.csproj -c Release -o nupkg
 
