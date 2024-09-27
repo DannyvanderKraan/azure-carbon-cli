@@ -26,23 +26,20 @@ namespace AzureCarbonCli.Commands.CarbonByResource
         }
 
         public override ValidationResult Validate(CommandContext context, CarbonByResourceSettings settings)
-        {
-            // Validate if the timeframe is set to Custom, then the from and to dates must be specified and the from date must be before the to date
+        { 
             if (settings.Timeframe == TimeframeType.Custom)
             {
-                if (settings.From == null)
+                if (settings.Year <= 0)
                 {
-                    return ValidationResult.Error("The from date must be specified when the timeframe is set to Custom.");
+                    return ValidationResult.Error("Year must be greater than zero.");
                 }
-
-                if (settings.To == null)
+                if (settings.Month <= 0)
                 {
-                    return ValidationResult.Error("The to date must be specified when the timeframe is set to Custom.");
+                    return ValidationResult.Error("Month must be greater than zero.");
                 }
-
-                if (settings.From > settings.To)
+                if (settings.Month > 12)
                 {
-                    return ValidationResult.Error("The from date must be before the to date.");
+                    return ValidationResult.Error("Month must be a number between 1-12.");
                 }
             }
 
@@ -98,8 +95,8 @@ namespace AzureCarbonCli.Commands.CarbonByResource
                         settings.GetScope, 
                         settings.Filter,
                         settings.Timeframe,
-                        settings.From,
-                        settings.To);
+                        settings.Year,
+                        settings.Month);
                 });
 
             // Write the output

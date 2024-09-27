@@ -13,8 +13,8 @@ public interface ICarbonRetriever
         Scope scope, 
         string[] filter, 
         TimeframeType settingsTimeframe, 
-        DateOnly from, 
-        DateOnly to);
+        int year,
+        int month);
 }
 
 
