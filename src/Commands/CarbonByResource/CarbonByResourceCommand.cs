@@ -26,21 +26,20 @@ namespace AzureCarbonCli.Commands.CarbonByResource
         }
 
         public override ValidationResult Validate(CommandContext context, CarbonByResourceSettings settings)
-        {
-            // Validate if the timeframe is set to Custom, then the month must be specified.
+        { 
             if (settings.Timeframe == TimeframeType.Custom)
             {
-                if (settings.Year == 0)
+                if (settings.Year <= 0)
                 {
-                    return ValidationResult.Error("Year can't be equal to zero.");
+                    return ValidationResult.Error("Year must be greater than zero.");
                 }
-                if (settings.Month == 0)
+                if (settings.Month <= 0)
                 {
-                    return ValidationResult.Error("Month can't be equal to zero.");
+                    return ValidationResult.Error("Month must be greater than zero.");
                 }
                 if (settings.Month > 12)
                 {
-                    return ValidationResult.Error("The given month is bigger than 12");
+                    return ValidationResult.Error("Month must be a number between 1-12.");
                 }
             }
 
