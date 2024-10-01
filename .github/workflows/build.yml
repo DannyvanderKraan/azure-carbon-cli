@@ -76,6 +76,7 @@ jobs:
         run: |
           asset_path=$(ls ./nupkg/azure-carbon-cli.*.nupkg | head -n 1)
           echo "Uploading asset: $asset_path"
-          gh release upload ${{ steps.create_release.outputs.upload_url }} "$asset_path"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh release upload ${{ steps.get_version.outputs.new_version }} "$asset_path" --clobber
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
