@@ -73,11 +73,9 @@ jobs:
         run: ls -R .
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        run: |
+          asset_path=$(ls ./nupkg/azure-carbon-cli.*.nupkg | head -n 1)
+          echo "Uploading asset: $asset_path"
+          gh release upload ${{ steps.create_release.outputs.upload_url }} "$asset_path"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./nupkg/azure-carbon-cli.*.nupkg
-          asset_name: azure-carbon-cli.nupkg
-          asset_content_type: application/octet-stream
