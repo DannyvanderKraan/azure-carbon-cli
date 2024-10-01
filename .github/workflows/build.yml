@@ -24,6 +24,7 @@ jobs:
         run: dotnet build src/azure-carbon-cli.csproj --no-restore
 
   release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
     needs: build
@@ -68,9 +69,6 @@ jobs:
           release_name: Release ${{ steps.get_version.outputs.new_version }}
           draft: false
           prerelease: false
-
-      - name: Test
-        run: ls -R .
 
       - name: Upload Release Asset
         run: |
