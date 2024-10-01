@@ -69,12 +69,15 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./nupkg/azure-carbon-cli.*.nupkg
-          asset_name: azure-carbon-cli.nupkg
-          asset_content_type: application/octet-stream
+      - name: Test
+        run: ls -R ./azure-carbon-cli/azure-carbon-cli
+
+      # - name: Upload Release Asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./azure-carbon-cli/azure-carbon-cli/nupkg/*.nupkg
+      #     asset_name: azure-carbon-cli.nupkg
+      #     asset_content_type: application/octet-stream
