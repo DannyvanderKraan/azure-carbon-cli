@@ -56,7 +56,7 @@ jobs:
         run: dotnet build src/azure-carbon-cli.csproj -c Release
 
       - name: Package CLI Tool
-        run: dotnet pack src/azure-carbon-cli.csproj -c Release -o nupkg
+        run: dotnet pack src/azure-carbon-cli.csproj -c Release -o ./nupkg
 
       - name: Create GitHub Release
         id: create_release
