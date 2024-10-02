@@ -1,24 +1,79 @@
 name: .NET Build
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
-    - name: Restore dependencies
-      run: dotnet restore src/azure-carbon-cli.csproj
+      - name: Restore dependencies
+        run: dotnet restore src/azure-carbon-cli.csproj
 
-    - name: Build
-      run: dotnet build src/azure-carbon-cli.csproj --no-restore
+      - name: Build
+        run: dotnet build src/azure-carbon-cli.csproj --no-restore
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Get latest release version
+        id: get_version
+        run: |
+          # Determine the latest version of the CLI tool by querying the GitHub API.
+          latest_version=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
+
+          if [ "$latest_version" == "null" ]; then
+            latest_version="v0.0.0"
+          fi
+          echo "Latest version: $latest_version"
+
+          IFS='.' read -a version_parts <<< "${latest_version#v}"
+          new_version="v${version_parts[0]}.$((version_parts[1] + 1)).0"
+          echo "New version: $new_version"
+          echo "::set-output name=new_version::$new_version"
+
+      - name: Build using Release config
+        run: dotnet build src/azure-carbon-cli.csproj -c Release
+
+      - name: Package CLI Tool
+        run: dotnet pack src/azure-carbon-cli.csproj -c Release -o ./nupkg
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.new_version }}
+          release_name: Release ${{ steps.get_version.outputs.new_version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        run: |
+          asset_path=$(ls ./nupkg/azure-carbon-cli.*.nupkg | head -n 1)
+          echo "Uploading asset: $asset_path"
+          gh release upload ${{ steps.get_version.outputs.new_version }} "$asset_path" --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
